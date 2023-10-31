@@ -1,55 +1,38 @@
+# --- NODE BASE ---
 FROM node:18-alpine3.16 AS base
 
-ENV DIR /project
-WORKDIR $DIR
-COPY package*.json $DIR
+ENV ROOT_PROJECT /project
+WORKDIR $ROOT_PROJECT
+ARG NPM_TOKEN
 
-RUN npm i -g pnpm
+LABEL version="1.0" \
+  description="ecommerce" \
+  maintainer1="Nicolas Bermudez <nico@gmail.com>" \
+  maintainer2="Cesar Martinez <km.music92@gmail.com>" 
 
-FROM base AS dependencies
-
-WORKDIR $DIR
-COPY package.json pnpm-lock.yaml ./
-RUN pnpm install
-
-FROM base AS dev
-
-ENV NODE_ENV=development
-
-
-COPY tsconfig*.json $DIR
-COPY src $DIR/src
-
-COPY --from=build /usr/bin/dumb-init /usr/bin/dumb-init
-COPY --from=build $DIR/node_modules $DIR/node_modules
-COPY --from=build $DIR/dist $DIR/dist
-
-
-
-EXPOSE $PORT
-CMD ["pnpm", "run", "start:dev"]
-
+# --- Build Production ---
 FROM base AS build
 
-RUN apk update && apk add --no-cache dumb-init
+COPY . $ROOT_PROJECT
 
-COPY package*.json $DIR
-COPY --from=dependencies $DIR/node_modules ./node_modules
+RUN  : \
+  apk update && apk add --no-cache dumb-init; \
+  echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > $ROOT_PROJECT/.npmrc; \
+  npm i -g @nestjs/cli; \
+  npm i -g pnpm; \
+  pnpm i --prod; \
+  pnpm run build; \
+  rm -f .npmrc
 
-COPY tsconfig*.json $DIR
-COPY src $DIR/src
-
-RUN pnpm run build
-RUN pnpm prune --production
-
+# --- PRODUCTION SETUP ---
 FROM base AS production
 
 ENV NODE_ENV=production
 ENV USER=node
 
 COPY --from=build /usr/bin/dumb-init /usr/bin/dumb-init
-COPY --from=build $DIR/node_modules $DIR/node_modules
-COPY --from=build $DIR/dist $DIR/dist
+COPY --from=build $ROOT_PROJECT/node_modules $ROOT_PROJECT/node_modules
+COPY --from=build $ROOT_PROJECT/dist $ROOT_PROJECT/dist
 
 USER $USER
 EXPOSE $PORT
