@@ -1,0 +1,22 @@
+# --- NODE BASE ---
+FROM node:18-alpine3.16 AS base
+
+ENV ROOT_PROJECT /project
+WORKDIR $ROOT_PROJECT
+ARG NPM_TOKEN
+
+# --- Build Development ---
+FROM base AS dev
+
+ENV NODE_ENV=development
+COPY . $ROOT_PROJECT
+
+RUN : \
+  echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > $DIR/.npmrc; \
+  npm i -g pnpm; \
+  npm i -g @nestjs/cli; \
+  pnpm i; \
+  rm -f .npmrc
+
+EXPOSE $PORT
+CMD ["pnpm", "run", "start:dev"]
