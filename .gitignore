@@ -40,3 +40,5 @@ lerna-debug.log*
 .docker.env
 
 *.txt
+
+postgres-data/

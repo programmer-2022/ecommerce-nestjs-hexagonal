@@ -13,10 +13,8 @@ COPY . $ROOT_PROJECT
 
 RUN : \
   echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > $DIR/.npmrc; \
-  npm i -g pnpm; \
-  npm i -g @nestjs/cli; \
-  pnpm i; \
+  npm i; \
   rm -f .npmrc
 
 EXPOSE $PORT
-CMD ["pnpm", "run", "start:dev"]
+CMD ["npm", "run", "start:dev"]

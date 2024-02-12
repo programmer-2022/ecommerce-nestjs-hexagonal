@@ -1,13 +1,12 @@
 .SILENT:
 
 # Inicia los contenedores de desarrollo en modo watch
-start-dev-watch:
+build-dev:
 	docker-compose --env-file .docker.env -f ./docker-compose-local.yml up --build
 	
 # Inicia los contenedores de desarrollo en segundo plano
 start-dev:
-	docker-compose --env-file .docker.env -f ./docker-compose-local.yml up -d --build
-	echo "Iniciando contenedor en segundo plano"
+	docker-compose --env-file .docker.env -f ./docker-compose-local.yml up
 
 # Borrar contenedores de desarrollo
 rm-dev:
